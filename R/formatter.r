@@ -185,3 +185,40 @@ precision <- function(x) {
   span <- if (zero_range(rng)) rng[1] else diff(rng)
   10 ^ floor(log10(span))
 }
+
+#' Currency formatter with euro symbol: round to nearest cent and display euro sign.
+#'
+#' The returned function will format a vector of values as currency.
+#' Values are rounded to the nearest cent, and cents are displayed if
+#' any of the values has a non-zero cents and the largest value is less
+#' than \code{largest_with_cents} which by default is 100000.
+#'
+#' @return a function with single paramater x, a numeric vector, that
+#'   returns a character vector
+#' @param largest_with_cents the value that all values of \code{x} must
+#'   be less than in order for the cents to be displayed
+#' @param x a numeric vector to format
+#' @export
+#' @examples
+#' euro_format()(c(100, 0.23, 1.456565, 2e3))
+#' euro_format()(c(1:10 * 10))
+#' euro(c(100, 0.23, 1.456565, 2e3))
+#' euro(c(1:10 * 10))
+#' euro(10^(1:8))
+euro_format <- function(largest_with_cents = 100000) {
+  function(x) {
+    x <- round_any(x, 0.01)
+    if (max(x, na.rm = TRUE) < largest_with_cents &
+        !all(x == floor(x), na.rm = TRUE)) {
+      nsmall <- 2L
+    } else {
+      x <- round_any(x, 1)
+      nsmall <- 0L
+    }
+    str_c("€", format(x, nsmall = nsmall, trim = TRUE, big.mark = ",", scientific = FALSE, digits=1L))
+  }
+}
+
+#' @export
+#' @rdname euro_format
+euro <- euro_format()
